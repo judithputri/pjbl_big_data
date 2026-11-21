@@ -1,0 +1,10 @@
+Fitur,Korelasi
+GenHlth,0.3026
+HighBP,0.2716
+BMI,0.2244
+DiffWalk,0.2242
+HighChol,0.2091
+Age,0.185
+HeartDiseaseorAttack,0.1803
+PhysHlth,0.1763
+Stroke,0.1072
