@@ -1,0 +1,71 @@
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=bigdata_jashujan
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_permissions_enabled=false
+    networks:
+      - bigdata-net
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    restart: always
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_permissions_enabled=false
+    networks:
+      - bigdata-net
+
+  nifi:
+    image: apache/nifi:1.23.2
+    container_name: nifi
+    restart: always
+    depends_on:
+      - namenode
+      - datanode
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./dataset:/opt/nifi/nifi-current/dataset
+      - ./hadoop-config:/opt/nifi/nifi-current/hadoop-config
+    environment:
+      - SINGLE_USER_CREDENTIALS_USERNAME=admin
+      - SINGLE_USER_CREDENTIALS_PASSWORD=admin12345678
+    networks:
+      - bigdata-net
+
+  spark:
+    image: apache/spark:3.5.3
+    container_name: spark
+    user: root
+    command: tail -f /dev/null
+    depends_on:
+      - namenode
+      - datanode
+    volumes:
+      - ./scripts:/opt/spark/work-dir/scripts
+      - ./models:/opt/spark/work-dir/models
+    networks:
+      - bigdata-net
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+
+networks:
+  bigdata-net:
+    driver: bridge
